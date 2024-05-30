@@ -41,7 +41,10 @@ model JournalEntry {
   analysis Analysis?
 
   //indexing array of foreign keys (used for one to many @unique is one to one)
-  @@index([userId])
+  //@@index([userId])
+  
+  //compound unique to be able to find Entries by id, and userID so only owners can see their entries
+  @@unique([userId, id])
 }
 
 model Analysis {
