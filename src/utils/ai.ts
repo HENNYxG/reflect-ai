@@ -2,7 +2,11 @@
 import { ChatOpenAI } from '@langchain/openai'
 import { StructuredOutputParser, OutputFixingParser} from "langchain/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { loadQARefineChain } from 'langchain/chains'
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import z from 'zod'
+import {Document} from 'langchain/document'
 
 const parser = StructuredOutputParser.fromZodSchema(
     z.object({
@@ -38,7 +42,6 @@ export const analyze = async (content) => {
     console.log(result.content)
     try {
         return parser.parse(result.content)
-        // console.log(res)
     } catch (e){
         console.log(e)
     //     const fixParser = OutputFixingParser.fromLLM(
@@ -50,3 +53,28 @@ export const analyze = async (content) => {
     // return fix
     }
 }
+
+//ai search
+//When we host this database, we wont have to take entires everytime. We can just index them everytime we save them in our SupaBase db, they get saved in the vector database. But for testing, we're working with vector in memory db so we have to create it every time we have a question
+export const qa = async (question, entries) => {
+    const docs = entries.map((entry) => {
+        return new Document({
+            pageContent: entry.content,
+            metadata: {id: entry.id, createdAt: entry.createdAt},
+        })
+    })
+
+    const model = new ChatOpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo' })
+    const chain = loadQARefineChain(model)
+    const embeddings = new OpenAIEmbeddings(); //returns a func that can create embeds for chains
+    const store = await MemoryVectorStore.fromDocuments(docs, embeddings)
+    const relevantDocs = await store.similaritySearch(question) //this is the relevant info needed to answer the question asked. 
+    const res = await chain.invoke({
+        input_documents: relevantDocs,
+        question,
+    })
+
+    return res.output_text
+}
+//We add metadata so the ai can have time of entry context as well as where the info came from for direct follow up queries related to their answer
+//loadQARefineChain: (an index chain) Iterates over input documents one by one, updating the answer with each iteration. it uses the previous version of the answer and the next document as context. best for QA over large number of documents.
