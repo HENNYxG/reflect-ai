@@ -11,16 +11,28 @@ export const POST = async () => {
         data: {
             userId: user.id,
             content: "How was your day?",
+            analysis: {
+        create: {
+          mood: 'Neutral',
+          subject: 'None',
+          negative: false,
+          summary: 'None',
+          sentimentScore: 0,
+          color: '#d8d8d8',
+          userId: user.id,
+        },
+      },
      },
     })
     //run analysis and push to db
-    const analysis = await analyze(entry.content)
-    await prisma.analysis.create({
-        data: {
-            entryId: entry.id,
-            ...analysis,
-        },
-    })
+    // const analysis = await analyze(entry.content)
+    // await prisma.analysis.create({
+    //     data: {
+    //         userId: user.id,
+    //         entryId: entry.id,
+    //         ...analysis,
+    //     },
+    // })
     //cleans and refetches the db data
     revalidatePath('/journal')
     //send back a object with the data prop holding the data, so we can always tap into the same key.

@@ -28,6 +28,7 @@ export const updateEntry = async (id, content) => {
 
     if (res.ok) {
         const data = await res.json()
+        console.log("DATA WAS PUSHED")
         return data.data
     } else {
     throw new Error('Something went wrong on API server!')

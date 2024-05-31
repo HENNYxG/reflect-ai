@@ -2,8 +2,14 @@ import { SignUp } from "@clerk/nextjs";
 
 const SignUpPage = () => {
     return (
-        <SignUp afterSignUpUrl="/new-user" forceRedirectUrl="/new-user"/>
-    )
+      <div className="w-screen h-screen flex justify-center ">
+        <SignUp
+          className=""
+          afterSignUpUrl="/new-user"
+          forceRedirectUrl="/new-user"
+        />
+      </div>
+    );
 }
 
 export default SignUpPage

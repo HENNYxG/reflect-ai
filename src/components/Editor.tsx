@@ -1,6 +1,6 @@
 'use client'
 import { updateEntry } from '@/utils/api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAutosave } from 'react-autosave';
 import Spinner from './Spinner';
 import AnalysisSidebar from './AnalysisSidebar';
@@ -9,17 +9,35 @@ const Editor = ({ entry }) => {
   const [value, setValue] = useState(entry.content)
   const [isLoading, setIsLoading] = useState(false)
   const [analysis, setAnalysis] = useState(entry.analysis);
+  const [changesMade, setChangesMade] = useState(false)
 
-    //we use _value for the latest version
+  // useEffect(() => {
+  //   setChangesMade(false)
+  // }, [])
+
+  useEffect(() => {
+    if (!changesMade) {
+      setChangesMade(true);
+      console.log('useEffect ran')
+    }
+  }, [value]);
+
+  //we use _value for the latest version
+
     useAutosave({
-        data: value,
-        onSave: async (_value) => {
-            setIsLoading(true)
-          const data = await updateEntry(entry.id, _value)
-          setAnalysis(data.analysis)
-            setIsLoading(false)
-        },
-    })
+      data: value,
+      onSave: async (_value) => {
+        if (changesMade) {
+          setIsLoading(true);
+          const data = await updateEntry(entry.id, _value);
+          setAnalysis(data.analysis);
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
+        }
+      },
+    });
+  
     return (
       <div className="w-full h-full grid grid-cols-3 gap-0 relative">
         <div className="absolute left-0 top-0 p-2">
@@ -33,7 +51,7 @@ const Editor = ({ entry }) => {
           <textarea
             className="w-full h-full p-8 text-xl outline-none"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => { setValue(e.target.value);}}
           />
         </div>
         <div className="col-span-1 ">
